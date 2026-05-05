@@ -15,7 +15,7 @@ class HistoryScreen extends StatelessWidget {
       "nominal": "Rp 250.000",
       "status": "Berhasil",
       "icon": Icons.clean_hands_rounded,
-      "color": Color(0xFF4CAF50), 
+      "color": Color(0xFF4CAF50),
     },
     {
       "id_transaksi": "TRX-20260502-089",
@@ -24,7 +24,7 @@ class HistoryScreen extends StatelessWidget {
       "nominal": "Rp 50.000",
       "status": "Berhasil",
       "icon": Icons.mosque_rounded,
-      "color": Color(0xFF1565C0), 
+      "color": Color(0xFF1565C0),
     },
     {
       "id_transaksi": "TRX-20260428-102",
@@ -33,17 +33,23 @@ class HistoryScreen extends StatelessWidget {
       "nominal": "Rp 100.000",
       "status": "Pending",
       "icon": Icons.volunteer_activism_rounded,
-      "color": Color(0xFFE65100), 
+      "color": Color(0xFFE65100),
     },
   ];
 
   // ==========================================
   // FUNGSI GENERATE & DOWNLOAD PDF E-KWITANSI
   // ==========================================
-  Future<void> _downloadKwitansi(BuildContext context, Map<String, dynamic> item) async {
+  Future<void> _downloadKwitansi(
+    BuildContext context,
+    Map<String, dynamic> item,
+  ) async {
     // Tampilkan loading snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Menyiapkan dokumen E-Kwitansi...'), duration: Duration(seconds: 1)),
+      const SnackBar(
+        content: Text('Menyiapkan dokumen E-Kwitansi...'),
+        duration: Duration(seconds: 1),
+      ),
     );
 
     final pdf = pw.Document();
@@ -61,9 +67,21 @@ class HistoryScreen extends StatelessWidget {
               pw.Center(
                 child: pw.Column(
                   children: [
-                    pw.Text('LEMBAGA AMIL ZAKAT & BANSOS', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                    pw.Text(
+                      'LEMBAGA AMIL ZAKAT & BANSOS',
+                      style: pw.TextStyle(
+                        fontSize: 18,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
                     pw.SizedBox(height: 4),
-                    pw.Text('Tanda Terima Pembayaran Digital', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                    pw.Text(
+                      'Tanda Terima Pembayaran Digital',
+                      style: const pw.TextStyle(
+                        fontSize: 12,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -75,7 +93,10 @@ class HistoryScreen extends StatelessWidget {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('ID Transaksi:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'ID Transaksi:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
                   pw.Text(item['id_transaksi']),
                 ],
               ),
@@ -83,7 +104,10 @@ class HistoryScreen extends StatelessWidget {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Tanggal:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'Tanggal:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
                   pw.Text(item['tanggal']),
                 ],
               ),
@@ -91,7 +115,10 @@ class HistoryScreen extends StatelessWidget {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Kategori:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'Kategori:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
                   pw.Text(item['kategori']),
                 ],
               ),
@@ -99,27 +126,50 @@ class HistoryScreen extends StatelessWidget {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Status:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text(item['status'], style: const pw.TextStyle(color: PdfColors.green)),
+                  pw.Text(
+                    'Status:',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text(
+                    item['status'],
+                    style: const pw.TextStyle(color: PdfColors.green),
+                  ),
                 ],
               ),
-              
+
               pw.SizedBox(height: 20),
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(12),
-                decoration: pw.BoxDecoration(color: PdfColors.grey200, borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8))),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey200,
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(8),
+                  ),
+                ),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('TOTAL PEMBAYARAN', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                    pw.Text(item['nominal'], style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                    pw.Text(
+                      'TOTAL PEMBAYARAN',
+                      style: pw.TextStyle(
+                        fontSize: 14,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.Text(
+                      item['nominal'],
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              
+
               pw.SizedBox(height: 40),
-              
+
               // Footer & Tanda Tangan
               pw.Align(
                 alignment: pw.Alignment.centerRight,
@@ -128,17 +178,29 @@ class HistoryScreen extends StatelessWidget {
                   children: [
                     pw.Text('Mengetahui,'),
                     pw.SizedBox(height: 40), // Spasi untuk stempel/tanda tangan
-                    pw.Text('Muhammad Syahril', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
-                    pw.Text('Admin Sistem ZIS', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text(
+                      'Muhammad Syahril',
+                      style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold,
+                        decoration: pw.TextDecoration.underline,
+                      ),
+                    ),
+                    pw.Text(
+                      'Admin Sistem ZIS',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
                   ],
                 ),
               ),
-              
+
               pw.Spacer(),
               pw.Center(
                 child: pw.Text(
                   'Semoga Allah memberikan pahala atas apa yang engkau berikan.',
-                  style: const pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic),
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontStyle: pw.FontStyle.italic,
+                  ),
                   textAlign: pw.TextAlign.center,
                 ),
               ),
@@ -158,9 +220,12 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FBF7), 
+      backgroundColor: const Color(0xFFF7FBF7),
       appBar: AppBar(
-        title: const Text('Riwayat Transaksi', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Riwayat Transaksi',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -180,7 +245,13 @@ class HistoryScreen extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4CAF50).withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,23 +259,49 @@ class HistoryScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total Donasi & Zakat Anda', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const Text(
+                      'Total Donasi & Zakat Anda',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-                      child: const Text('Tahun Ini', style: TextStyle(color: Colors.white, fontSize: 12)),
-                    )
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Tahun Ini',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                const Text('Rp 400.000', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Rp 400.000',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
 
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text('Transaksi Terbaru', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            child: Text(
+              'Transaksi Terbaru',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -223,47 +320,90 @@ class HistoryScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: item['color'].withOpacity(0.1), shape: BoxShape.circle),
-                        child: Icon(item['icon'], color: item['color'], size: 28),
+                        decoration: BoxDecoration(
+                          color: item['color'].withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          item['icon'],
+                          color: item['color'],
+                          size: 28,
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      
+
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item['kategori'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
+                            Text(
+                              item['kategori'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: Colors.black87,
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text(item['tanggal'], style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                            Text(
+                              item['tanggal'],
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: isBerhasil ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                                color:
+                                    isBerhasil
+                                        ? const Color(0xFFE8F5E9)
+                                        : const Color(0xFFFFF3E0),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 item['status'],
                                 style: TextStyle(
-                                  fontSize: 10, fontWeight: FontWeight.bold,
-                                  color: isBerhasil ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      isBerhasil
+                                          ? const Color(0xFF2E7D32)
+                                          : const Color(0xFFE65100),
                                 ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
-                      
+
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(item['nominal'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
+                          Text(
+                            item['nominal'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.black87,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           if (isBerhasil)
                             InkWell(
@@ -274,10 +414,19 @@ class HistoryScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
                                 padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(border: Border.all(color: const Color(0xFF4CAF50)), borderRadius: BorderRadius.circular(8)),
-                                child: const Icon(Icons.download_rounded, color: Color(0xFF4CAF50), size: 18),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: const Color(0xFF4CAF50),
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.download_rounded,
+                                  color: Color(0xFF4CAF50),
+                                  size: 18,
+                                ),
                               ),
-                            )
+                            ),
                         ],
                       ),
                     ],

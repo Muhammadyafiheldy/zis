@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../home/home_screen.dart';
-import '../history/history_screen.dart';
-// 1. Tambahkan baris import ini agar mengarah ke file profil yang baru
-import '../profile/profile_screen.dart';
+import 'home_screen.dart';
+import 'history_screen.dart';
+import '../profile/profile_screen.dart'; 
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -19,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Hanya 3 Halaman sesuai permintaan
   final List<Widget> _pages = [
     const HomeScreen(),
-    const HistoryScreen(), 
+    const HistoryScreen(),
     const ProfileScreen(), // 3. Sekarang ini akan memanggil desain profil yang asli
   ];
 
@@ -49,9 +48,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           elevation: 0,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Beranda'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'Riwayat'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profil'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              label: 'Beranda',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long_rounded),
+              label: 'Riwayat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_rounded),
+              label: 'Profil',
+            ),
           ],
         ),
       ),

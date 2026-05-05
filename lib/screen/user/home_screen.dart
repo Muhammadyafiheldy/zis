@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../zakat/calculator_screen.dart'; 
-import '../infaq/infaq_menu_screen.dart'; 
-import '../sedekah/sedekah_menu_screen.dart';
+import 'calculator_screen.dart'; 
+import 'infaq_menu_screen.dart'; 
+import 'sedekah_menu_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);

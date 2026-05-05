@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_page.dart';
+
+// Import halaman Login
+import 'package:zis/screen/login_page.dart'; // Sesuaikan jika letak login_page.dart berbeda
+
+// 1. Tambahkan import untuk halaman Dashboard User
+import 'package:zis/screen/user/dashboard_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -38,15 +43,13 @@ class AuthGate extends StatelessWidget {
               String role = firestoreSnapshot.data!.get('role');
 
               if (role == 'admin') {
-                // return const AdminDashboard(); // Uncomment nanti
+                // TODO: Ganti dengan AdminDashboard() jika file-nya sudah kamu buat nanti
                 return const Scaffold(
-                  body: Center(child: Text("Halaman Admin")),
+                  body: Center(child: Text("Halaman Admin Dashboard")),
                 );
               } else {
-                // return const UserHomePage(); // Uncomment nanti
-                return const Scaffold(
-                  body: Center(child: Text("Halaman User Biasa")),
-                );
+                // 2. Arahkan user biasa langsung ke DashboardScreen aslinya
+                return const DashboardScreen();
               }
             }
 
