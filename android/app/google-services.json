@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "666943458121",
+    "project_id": "zis-mobile",
+    "storage_bucket": "zis-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:666943458121:android:e20d4272490a12bf49a898",
+        "android_client_info": {
+          "package_name": "com.example.zis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRL5C5hW2gld11OnKH8UIxKJ3VOgTbUNs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
