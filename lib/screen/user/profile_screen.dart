@@ -1,10 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+// TODO: Sesuaikan lokasi import LoginScreen dengan folder kamu
+import '../auth/login_page.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
 // ============================================================================
-// 1. HALAMAN PROFIL UTAMA (Tetap sama, tidak ada yang diubah)
+// 1. HALAMAN PROFIL UTAMA (SUDAH DINAMIS & TERHUBUNG FIREBASE + SHAREDPREFS)
 // ============================================================================
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _namaPengguna = 'Memuat...';
+  String _emailPengguna = 'Memuat...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Fungsi untuk mengambil data dari Firebase & Shared Preferences
+  // Fungsi untuk mengambil data dari Firebase & Shared Preferences
+  // Fungsi untuk mengambil data dari Firebase & Shared Preferences
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // 1. Langsung set email karena ini pasti ada dari Firebase Auth
+      setState(() {
+        _emailPengguna = user.email ?? 'Tidak ada email';
+      });
+
+      try {
+        // 2. Ambil data nama dari Firestore (Tabel 'users')
+        // Pastikan nama collection-nya sesuai dengan database kamu, biasanya 'users'
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+        if (userDoc.exists && userDoc.data() != null) {
+          setState(() {
+            // Memanggil field 'name' sesuai dengan model kamu
+            _namaPengguna = userDoc.data()!['name'] ?? userDoc.data()!['nama'] ?? user.displayName ?? 'Hamba Allah';
+          });
+        } else {
+          // 3. Fallback: Kalau di Firestore belum ada, coba cek Shared Preferences
+          final prefs = await SharedPreferences.getInstance();
+          setState(() {
+            _namaPengguna = prefs.getString('name') ?? prefs.getString('nama') ?? user.displayName ?? 'Hamba Allah';
+          });
+        }
+      } catch (e) {
+        // Jika terjadi error (misal tidak ada internet), ambil dari lokal
+        final prefs = await SharedPreferences.getInstance();
+        setState(() {
+          _namaPengguna = prefs.getString('name') ?? user.displayName ?? 'Hamba Allah';
+        });
+      }
+    }
+  }
+
+  // Fungsi Eksekusi Logout
+  Future<void> _prosesLogout(BuildContext context) async {
+    // 1. Hapus semua data di Shared Preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    // 2. Logout dari Firebase
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) return;
+
+    // 3. Pindah ke halaman Login dan hapus semua riwayat halaman sebelumnya
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false, // Ini bikin user gak bisa back pakai tombol HP ke halaman profil lagi
+    );
+  }
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -25,10 +102,8 @@ class ProfileScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
-                Navigator.pop(context); 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Berhasil Logout'))
-                );
+                Navigator.pop(context); // Tutup dialog dulu
+                _prosesLogout(context); // Eksekusi fungsi logout aslinya
               },
               child: const Text('Ya, Keluar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
@@ -95,9 +170,14 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text('Hamba Allah', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  
+                  // MENAMPILKAN NAMA DINAMIS
+                  Text(_namaPengguna, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
                   const SizedBox(height: 4),
-                  Text('hamba.allah@email.com', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                  
+                  // MENAMPILKAN EMAIL DINAMIS
+                  Text(_emailPengguna, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                  
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -238,7 +318,6 @@ class ChangePasswordScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // Ilustrasi Gembok
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -261,7 +340,6 @@ class ChangePasswordScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // Form Fields dibungkus Card
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -336,7 +414,6 @@ class FaqScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Banner Bantuan
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
@@ -349,7 +426,6 @@ class FaqScreen extends StatelessWidget {
               children: [
                 const Text('Halo, ada yang bisa kami bantu?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
                 const SizedBox(height: 16),
-                // Fake Search Bar
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(color: const Color(0xFFF7FBF7), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
@@ -365,7 +441,6 @@ class FaqScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // List FAQ
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -395,7 +470,7 @@ class FaqScreen extends StatelessWidget {
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Theme(
-        data: ThemeData(dividerColor: Colors.transparent), // Hilangkan garis bawaan ExpansionTile
+        data: ThemeData(dividerColor: Colors.transparent), 
         child: ExpansionTile(
           title: Text(question, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
           iconColor: const Color(0xFF4CAF50),
@@ -510,7 +585,6 @@ class AboutScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo Aplikasi
               Container(
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
@@ -531,7 +605,6 @@ class AboutScreen extends StatelessWidget {
               
               const SizedBox(height: 40),
               
-              // Card Deskripsi Singkat
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -548,7 +621,6 @@ class AboutScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
               
-              // Tombol Sosial Media (Hanya Visual)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

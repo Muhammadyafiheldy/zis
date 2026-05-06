@@ -1,80 +1,78 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ============================================================================
-// 1. HALAMAN MENU DAFTAR INFAQ
+// 1. HALAMAN MENU DAFTAR INFAQ (DINAMIS DARI FIREBASE)
 // ============================================================================
 class InfaqMenuScreen extends StatelessWidget {
-  InfaqMenuScreen({Key? key}) : super(key: key);
-
-  // Data Dummy ditambahkan Image dan Deskripsi Lengkap
-  final List<Map<String, dynamic>> infaqList = const [
-    {
-      "id": "masjid",
-      "title": "Infaq Pembangunan Masjid", 
-      "desc": "Bantu bangun dan renovasi rumah Allah", 
-      "full_desc": "Mari bersama membangun dan merenovasi masjid-masjid di daerah terpencil yang belum memiliki fasilitas ibadah yang layak. Infaq yang Anda berikan akan disalurkan untuk pembelian material bangunan, fasilitas tempat wudhu, dan perlengkapan shalat.",
-      "icon": Icons.mosque,
-      "image": "https://picsum.photos/seed/infaq_masjid/600/400"
-    },
-    {
-      "id": "pendidikan",
-      "title": "Infaq Pendidikan", 
-      "desc": "Dukung pendidikan anak yatim dan dhuafa", 
-      "full_desc": "Banyak anak berprestasi yang terancam putus sekolah karena kendala biaya. Infaq pendidikan ini bertujuan untuk memberikan beasiswa, perlengkapan sekolah, dan fasilitas belajar yang memadai bagi anak yatim dan dhuafa.",
-      "icon": Icons.school,
-      "image": "https://picsum.photos/seed/infaq_sekolah/600/400"
-    },
-    {
-      "id": "kesehatan",
-      "title": "Infaq Kesehatan", 
-      "desc": "Bantu biaya pengobatan pasien dhuafa", 
-      "full_desc": "Berikan harapan sembuh bagi saudara kita yang sedang berjuang melawan penyakit parah namun tidak memiliki biaya untuk berobat. Dana infaq akan digunakan untuk biaya rumah sakit, tebus obat, dan operasional ambulans gratis.",
-      "icon": Icons.local_hospital,
-      "image": "https://picsum.photos/seed/infaq_sehat/600/400"
-    },
-  ];
+  const InfaqMenuScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FBF7), // Putih hint hijau
+      backgroundColor: const Color(0xFFF7FBF7),
       appBar: AppBar(
-        title: const Text('Pilih Infaq', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)), 
+        title: const Text('Program Infaq', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)), 
         backgroundColor: Colors.white, 
         elevation: 0, 
         iconTheme: const IconThemeData(color: Colors.black87),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: infaqList.length,
-        itemBuilder: (context, index) {
-          final item = infaqList[index];
-          return Card(
-            elevation: 2, margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            color: Colors.white,
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                // Tema Hijau untuk Icon
-                decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(12)),
-                child: Icon(item['icon'], color: const Color(0xFF2E7D32)),
-              ),
-              title: Text(item['title'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(item['desc'], style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios, color: Color(0xFF4CAF50), size: 16),
-              onTap: () {
-                // Arahkan ke Halaman Detail Infaq
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => InfaqDetailScreen(dataInfaq: item)
-                ));
-              },
-            ),
+      body: StreamBuilder<QuerySnapshot>(
+        // FILTER: Hanya ambil kategori 'infaq' yang dibuat oleh Admin
+        stream: FirebaseFirestore.instance
+            .collection('programs')
+            .where('kategori', isEqualTo: 'infaq')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)));
+          }
+
+          final docs = snapshot.data?.docs ?? [];
+
+          if (docs.isEmpty) {
+            return const Center(
+              child: Text("Belum ada program infaq tersedia.", style: TextStyle(color: Colors.grey)),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final data = docs[index].data() as Map<String, dynamic>;
+              return Card(
+                elevation: 2, margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: Colors.white,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: const Color(0xFFE3F2FD), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.mosque_rounded, color: Color(0xFF1565C0)),
+                  ),
+                  title: Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(data['deskripsi'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Color(0xFF4CAF50), size: 16),
+                  onTap: () {
+                    // Pindah ke detail infaq
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => InfaqDetailScreen(dataInfaq: data)
+                    ));
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -95,7 +93,7 @@ class InfaqDetailScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => InfaqPaymentForm(title: dataInfaq['title']),
+      builder: (context) => InfaqPaymentForm(title: dataInfaq['judul']),
     );
   }
 
@@ -105,48 +103,31 @@ class InfaqDetailScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Detail Infaq', style: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        backgroundColor: Colors.white, elevation: 0, iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Foto Header
-            Image.network(
-              dataInfaq['image'],
-              width: double.infinity,
-              height: 250,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: double.infinity, height: 250, color: Colors.grey.shade200,
-                child: const Icon(Icons.image, size: 50, color: Colors.grey),
-              ),
+            // Placeholder Image (Bisa diganti jika admin sudah bisa upload image)
+            Container(
+              height: 250, width: double.infinity, color: const Color(0xFFE3F2FD),
+              child: const Icon(Icons.mosque, size: 80, color: Color(0xFF1565C0)),
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    dataInfaq['title'],
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-                  ),
+                  Text(dataInfaq['judul'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9), // Hijau Muda
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
                     child: const Text('Tujuan Infaq', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    dataInfaq['full_desc'],
-                    style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87),
-                  ),
+                  Text(dataInfaq['deskripsi'] ?? '', style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -154,7 +135,6 @@ class InfaqDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-      // Tombol Bayar di Bawah
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -165,10 +145,10 @@ class InfaqDetailScreen extends StatelessWidget {
           height: 55,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50), // Hijau Segar
+              backgroundColor: const Color(0xFF4CAF50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: () => _showPaymentForm(context), // Memanggil form pop-up
+            onPressed: () => _showPaymentForm(context),
             child: const Text('LANJUTKAN PEMBAYARAN', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ),
@@ -178,7 +158,7 @@ class InfaqDetailScreen extends StatelessWidget {
 }
 
 // ============================================================================
-// 3. FORM PEMBAYARAN BOTTOM SHEET (Muncul dari bawah)
+// 3. FORM PEMBAYARAN BOTTOM SHEET (INFAQ)
 // ============================================================================
 class InfaqPaymentForm extends StatefulWidget {
   final String title;
@@ -193,13 +173,110 @@ class _InfaqPaymentFormState extends State<InfaqPaymentForm> {
   final TextEditingController _nominalCtrl = TextEditingController();
   double _nominal = 0;
 
+  Future<void> _prosesPembayaranMidtrans() async {
+    if (_nominal < 10000) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Minimal infaq adalah Rp 10.000'), backgroundColor: Colors.orange));
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50))),
+    );
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      String emailAsli = user?.email ?? 'hamba.allah@email.com';
+      String namaAsli = 'Hamba Allah';
+
+      // AMBIL NAMA ASLI DARI DATABASE users
+      if (user != null) {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          namaAsli = userDoc.data()?['name'] ?? userDoc.data()?['nama'] ?? user.displayName ?? 'Hamba Allah';
+        }
+      }
+
+      String orderId = "INFAQ-${DateTime.now().millisecondsSinceEpoch}";
+      // PASTIIN PAKAI SERVER KEY SANDBOX KAMU BRO
+      String serverKey = "Mid-server-OQnL4_2OThuaUo0oNJhaDATw"; 
+      String basicAuth = 'Basic ${base64Encode(utf8.encode('$serverKey:'))}';
+
+      // 1. Simpan ke Firestore (Status Pending)
+      await FirebaseFirestore.instance.collection('transactions').doc(orderId).set({
+        'orderId': orderId,
+        'kategori': widget.title,
+        'nominal': _nominal.toInt(),
+        'grossAmount': _nominal.toInt(),
+        'status': 'Pending',
+        'timestamp': FieldValue.serverTimestamp(),
+        'name': namaAsli, 
+        'email': emailAsli,
+      });
+
+      // 2. Setup Parameter Midtrans
+      final Map<String, dynamic> body = {
+        "transaction_details": {
+          "order_id": orderId,
+          "gross_amount": _nominal.toInt()
+        },
+        "customer_details": {
+          "first_name": namaAsli,
+          "email": emailAsli,
+        },
+        "item_details": [
+          {
+            "id": "ITEM-INFAQ",
+            "price": _nominal.toInt(),
+            "quantity": 1,
+            "name": widget.title.length > 50 ? widget.title.substring(0, 47) + "..." : widget.title
+          }
+        ]
+      };
+
+      // 3. Tembak API Midtrans
+      final response = await http.post(
+        Uri.parse('https://app.sandbox.midtrans.com/snap/v1/transactions'),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": basicAuth,
+        },
+        body: jsonEncode(body),
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // Tutup loading
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        final String redirectUrl = data['redirect_url'];
+
+        final Uri url = Uri.parse(redirectUrl);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+          if (mounted) Navigator.pop(context); // Tutup bottom sheet
+        } else {
+          throw 'Tidak dapat membuka halaman pembayaran Midtrans.';
+        }
+      } else {
+        throw 'Error Midtrans: ${response.body}';
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (Navigator.canPop(context)) Navigator.pop(context); 
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     
     return Container(
       padding: EdgeInsets.only(
-        bottom: mediaQuery.viewInsets.bottom, // Agar tidak tertutup keyboard
+        bottom: mediaQuery.viewInsets.bottom,
         top: 24, left: 24, right: 24
       ),
       decoration: const BoxDecoration(
@@ -222,7 +299,6 @@ class _InfaqPaymentFormState extends State<InfaqPaymentForm> {
             Text(widget.title, style: const TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
 
-            // Input Text Nominal
             TextField(
               controller: _nominalCtrl,
               keyboardType: TextInputType.number,
@@ -233,8 +309,8 @@ class _InfaqPaymentFormState extends State<InfaqPaymentForm> {
               },
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               decoration: InputDecoration(
-                labelText: 'Nominal Infaq',
-                labelStyle: const TextStyle(color: Color(0xFF2E7D32), fontSize: 16),
+                labelText: 'Nominal (Minimal Rp 10.000)',
+                labelStyle: const TextStyle(color: Color(0xFF2E7D32), fontSize: 14),
                 filled: true,
                 fillColor: const Color(0xFFF7FBF7),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade300)),
@@ -247,7 +323,6 @@ class _InfaqPaymentFormState extends State<InfaqPaymentForm> {
 
             const SizedBox(height: 30),
 
-            // Tombol Bayar
             Container(
               margin: const EdgeInsets.only(bottom: 24),
               width: double.infinity,
@@ -257,16 +332,7 @@ class _InfaqPaymentFormState extends State<InfaqPaymentForm> {
                   backgroundColor: const Color(0xFF4CAF50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: _nominal > 0 ? () {
-                  // TODO: Lanjut ke gerbang pembayaran (Payment Gateway)
-                  Navigator.pop(context); // Tutup pop up
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Memproses Infaq Rp ${_nominal.toStringAsFixed(0)}...'),
-                      backgroundColor: const Color(0xFF2E7D32),
-                    )
-                  );
-                } : null, // Tombol non-aktif jika nominal 0
+                onPressed: _nominal >= 10000 ? _prosesPembayaranMidtrans : null, 
                 child: const Text('BAYAR SEKARANG', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
               ),
             ),

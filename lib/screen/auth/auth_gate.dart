@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:zis/screen/admin/admin_dashboard_screen.dart';
 // Import halaman Login
 import '../auth/login_page.dart';
 
@@ -44,9 +44,7 @@ class AuthGate extends StatelessWidget {
 
               if (role == 'admin') {
                 // TODO: Ganti dengan AdminDashboard() jika file-nya sudah kamu buat nanti
-                return const Scaffold(
-                  body: Center(child: Text("Halaman Admin Dashboard")),
-                );
+               return const AdminDashboardScreen();
               } else {
                 // 2. Arahkan user biasa langsung ke DashboardScreen aslinya
                 return const DashboardScreen();

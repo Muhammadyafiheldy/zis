@@ -1,80 +1,86 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ============================================================================
-// 1. HALAMAN MENU DAFTAR SEDEKAH
+// 1. HALAMAN MENU DAFTAR SEDEKAH (DINAMIS DARI FIRESTORE)
 // ============================================================================
 class SedekahMenuScreen extends StatelessWidget {
-  SedekahMenuScreen({Key? key}) : super(key: key);
-
-  // Data Dummy ditambahkan Image dan Deskripsi Lengkap
-  final List<Map<String, dynamic>> sedekahList = const [
-    {
-      "id": "subuh",
-      "title": "Sedekah Subuh", 
-      "desc": "Raih keberkahan pagi dengan sedekah subuh", 
-      "full_desc": "Malaikat turun setiap pagi untuk mendoakan orang yang bersedekah. Mari rutinkan sedekah subuh untuk mengawali hari dengan keberkahan. Dana yang terkumpul akan disalurkan untuk berbagai program kebaikan dan kemanusiaan mendesak.",
-      "icon": Icons.wb_sunny_rounded,
-      "image": "https://picsum.photos/seed/sedekah_subuh/600/400"
-    },
-    {
-      "id": "jumat",
-      "title": "Sedekah Jumat Berkah", 
-      "desc": "Lipatgandakan pahala di hari jumat", 
-      "full_desc": "Hari Jumat adalah sayyidul ayyam (penghulu hari). Sedekah di hari Jumat memiliki keutamaan yang berlipat ganda. Mari berbagi rezeki untuk membahagiakan yatim, dhuafa, dan fisabilillah di hari yang penuh berkah ini.",
-      "icon": Icons.event_rounded,
-      "image": "https://picsum.photos/seed/sedekah_jumat/600/400"
-    },
-    {
-      "id": "makanan",
-      "title": "Sedekah Makanan", 
-      "desc": "Berbagi kebahagiaan lewat hidangan bergizi", 
-      "full_desc": "Masih banyak saudara kita yang kesulitan mendapatkan makanan bergizi setiap harinya. Melalui program ini, kita akan membagikan paket makanan siap saji dan sembako untuk keluarga prasejahtera, pekerja harian lepas, dan anak jalanan.",
-      "icon": Icons.restaurant_rounded,
-      "image": "https://picsum.photos/seed/sedekah_makanan/600/400"
-    },
-  ];
+  const SedekahMenuScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7FBF7),
       appBar: AppBar(
-        title: const Text('Pilih Sedekah', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)), 
+        title: const Text('Program Sedekah', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)), 
         backgroundColor: Colors.white, 
         elevation: 0, 
         iconTheme: const IconThemeData(color: Colors.black87),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: sedekahList.length,
-        itemBuilder: (context, index) {
-          final item = sedekahList[index];
-          return Card(
-            elevation: 2, margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            color: Colors.white,
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                // Aksen warna orange agar beda dari Infaq (Biru)
-                decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
-                child: Icon(item['icon'], color: const Color(0xFFE65100)),
+      body: StreamBuilder<QuerySnapshot>(
+        // FILTER: Hanya ambil kategori 'sedekah' yang diinput Admin
+        stream: FirebaseFirestore.instance
+            .collection('programs')
+            .where('kategori', isEqualTo: 'sedekah')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)));
+          }
+
+          final docs = snapshot.data?.docs ?? [];
+
+          if (docs.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.volunteer_activism_outlined, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text("Belum ada program sedekah tersedia.", style: TextStyle(color: Colors.grey)),
+                ],
               ),
-              title: Text(item['title'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(item['desc'], style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios, color: Color(0xFF4CAF50), size: 16),
-              onTap: () {
-                // Arahkan ke Halaman Detail Sedekah
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => SedekahDetailScreen(dataSedekah: item)
-                ));
-              },
-            ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final data = docs[index].data() as Map<String, dynamic>;
+              return Card(
+                elevation: 2, margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: Colors.white,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: Container(
+                    padding: const EdgeInsets.all(12),
+                    // Tema warna Oranye untuk Sedekah
+                    decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFE65100)),
+                  ),
+                  title: Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(data['deskripsi'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Color(0xFF4CAF50), size: 16),
+                  onTap: () {
+                    // Pindah ke detail sedekah
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => SedekahDetailScreen(dataSedekah: data)
+                    ));
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -95,7 +101,7 @@ class SedekahDetailScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => SedekahPaymentForm(title: dataSedekah['title']),
+      builder: (context) => SedekahPaymentForm(title: dataSedekah['judul']),
     );
   }
 
@@ -113,40 +119,28 @@ class SedekahDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Foto Header
-            Image.network(
-              dataSedekah['image'],
-              width: double.infinity,
-              height: 250,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: double.infinity, height: 250, color: Colors.grey.shade200,
-                child: const Icon(Icons.image, size: 50, color: Colors.grey),
-              ),
+            // Placeholder Image Sedekah
+            Container(
+              height: 250, width: double.infinity, color: const Color(0xFFFFF3E0),
+              child: const Icon(Icons.volunteer_activism, size: 80, color: Color(0xFFE65100)),
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    dataSedekah['title'],
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-                  ),
+                  Text(dataSedekah['judul'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9), // Hijau Muda
+                      color: const Color(0xFFE8F5E9),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text('Tujuan Sedekah', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                    child: const Text('Informasi Program', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    dataSedekah['full_desc'],
-                    style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87),
-                  ),
+                  Text(dataSedekah['deskripsi'] ?? '', style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -154,7 +148,6 @@ class SedekahDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-      // Tombol Bayar di Bawah
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -165,10 +158,10 @@ class SedekahDetailScreen extends StatelessWidget {
           height: 55,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50), // Hijau Segar
+              backgroundColor: const Color(0xFF4CAF50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: () => _showPaymentForm(context), // Memanggil form pop-up
+            onPressed: () => _showPaymentForm(context),
             child: const Text('LANJUTKAN SEDEKAH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ),
@@ -178,7 +171,7 @@ class SedekahDetailScreen extends StatelessWidget {
 }
 
 // ============================================================================
-// 3. FORM PEMBAYARAN BOTTOM SHEET (Muncul dari bawah)
+// 3. FORM PEMBAYARAN BOTTOM SHEET (SEDEKAH)
 // ============================================================================
 class SedekahPaymentForm extends StatefulWidget {
   final String title;
@@ -193,13 +186,110 @@ class _SedekahPaymentFormState extends State<SedekahPaymentForm> {
   final TextEditingController _nominalCtrl = TextEditingController();
   double _nominal = 0;
 
+  Future<void> _prosesPembayaranMidtrans() async {
+    if (_nominal < 10000) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Minimal sedekah adalah Rp 10.000'), backgroundColor: Colors.orange));
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50))),
+    );
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      String emailAsli = user?.email ?? 'hamba.allah@email.com';
+      String namaAsli = 'Hamba Allah';
+
+      // AMBIL DATA AKURAT DARI FIRESTORE (users)
+      if (user != null) {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          namaAsli = userDoc.data()?['name'] ?? userDoc.data()?['nama'] ?? user.displayName ?? 'Hamba Allah';
+        }
+      }
+
+      String orderId = "SEDEKAH-${DateTime.now().millisecondsSinceEpoch}";
+      // MASUKKAN SERVER KEY SANDBOX KAMU DI SINI BRO
+      String serverKey = "Mid-server-OQnL4_2OThuaUo0oNJhaDATw"; 
+      String basicAuth = 'Basic ${base64Encode(utf8.encode('$serverKey:'))}';
+
+      // 1. Simpan Transaksi ke Firestore (Pending)
+      await FirebaseFirestore.instance.collection('transactions').doc(orderId).set({
+        'orderId': orderId,
+        'kategori': widget.title,
+        'nominal': _nominal.toInt(),
+        'grossAmount': _nominal.toInt(),
+        'status': 'Pending',
+        'timestamp': FieldValue.serverTimestamp(),
+        'name': namaAsli, 
+        'email': emailAsli,
+      });
+
+      // 2. Setup Parameter Body untuk Midtrans
+      final Map<String, dynamic> body = {
+        "transaction_details": {
+          "order_id": orderId,
+          "gross_amount": _nominal.toInt()
+        },
+        "customer_details": {
+          "first_name": namaAsli,
+          "email": emailAsli,
+        },
+        "item_details": [
+          {
+            "id": "ITEM-SEDEKAH",
+            "price": _nominal.toInt(),
+            "quantity": 1,
+            "name": widget.title.length > 50 ? widget.title.substring(0, 47) + "..." : widget.title
+          }
+        ]
+      };
+
+      // 3. Tembak API Midtrans Snap
+      final response = await http.post(
+        Uri.parse('https://app.sandbox.midtrans.com/snap/v1/transactions'),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": basicAuth,
+        },
+        body: jsonEncode(body),
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // Tutup loading
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        final String redirectUrl = data['redirect_url'];
+
+        final Uri url = Uri.parse(redirectUrl);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+          if (mounted) Navigator.pop(context); // Tutup bottom sheet
+        } else {
+          throw 'Tidak dapat membuka halaman pembayaran Midtrans.';
+        }
+      } else {
+        throw 'Error Midtrans: ${response.body}';
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (Navigator.canPop(context)) Navigator.pop(context); 
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     
     return Container(
       padding: EdgeInsets.only(
-        bottom: mediaQuery.viewInsets.bottom, // Agar tidak tertutup keyboard saat ngetik
+        bottom: mediaQuery.viewInsets.bottom,
         top: 24, left: 24, right: 24
       ),
       decoration: const BoxDecoration(
@@ -222,7 +312,6 @@ class _SedekahPaymentFormState extends State<SedekahPaymentForm> {
             Text(widget.title, style: const TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
 
-            // Input Text Nominal
             TextField(
               controller: _nominalCtrl,
               keyboardType: TextInputType.number,
@@ -233,7 +322,7 @@ class _SedekahPaymentFormState extends State<SedekahPaymentForm> {
               },
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               decoration: InputDecoration(
-                labelText: 'Nominal Sedekah',
+                labelText: 'Nominal (Minimal Rp 10.000)',
                 labelStyle: const TextStyle(color: Color(0xFF2E7D32), fontSize: 16),
                 filled: true,
                 fillColor: const Color(0xFFF7FBF7),
@@ -247,7 +336,6 @@ class _SedekahPaymentFormState extends State<SedekahPaymentForm> {
 
             const SizedBox(height: 30),
 
-            // Tombol Bayar
             Container(
               margin: const EdgeInsets.only(bottom: 24),
               width: double.infinity,
@@ -257,17 +345,8 @@ class _SedekahPaymentFormState extends State<SedekahPaymentForm> {
                   backgroundColor: const Color(0xFF4CAF50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: _nominal > 0 ? () {
-                  // TODO: Lanjut ke gerbang pembayaran (Payment Gateway)
-                  Navigator.pop(context); // Tutup pop up
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Memproses Sedekah Rp ${_nominal.toStringAsFixed(0)}...'),
-                      backgroundColor: const Color(0xFF2E7D32),
-                    )
-                  );
-                } : null, // Tombol non-aktif jika nominal 0
-                child: const Text('SEDEKAH SEKARANG', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                onPressed: _nominal >= 10000 ? _prosesPembayaranMidtrans : null, 
+                child: const Text('BAYAR SEKARANG', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
               ),
             ),
           ],
