@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Import halaman Login
-import 'package:zis/screen/login_page.dart'; // Sesuaikan jika letak login_page.dart berbeda
+import '../auth/login_page.dart';
 
 // 1. Tambahkan import untuk halaman Dashboard User
 import 'package:zis/screen/user/dashboard_screen.dart';
