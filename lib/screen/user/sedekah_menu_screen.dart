@@ -60,12 +60,23 @@ class SedekahMenuScreen extends StatelessWidget {
                 color: Colors.white,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
-                  leading: Container(
-                    padding: const EdgeInsets.all(12),
-                    // Tema warna Oranye untuk Sedekah
-                    decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.volunteer_activism_rounded, color: Color(0xFFE65100)),
-                  ),
+                  // Ganti leading di dalam ListTile:
+leading: ClipRRect(
+  borderRadius: BorderRadius.circular(8),
+  child: data['imageUrl'] != null && data['imageUrl'] != ''
+      ? Image.network(
+          data['imageUrl'],
+          width: 50, height: 50, fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width: 50, height: 50, color: Colors.green[50],
+            child: const Icon(Icons.image_not_supported, color: Colors.green),
+          ),
+        )
+      : Container(
+          width: 50, height: 50, color: Colors.green[50],
+          child: const Icon(Icons.clean_hands_rounded, color: Colors.green),
+        ),
+),
                   title: Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 8.0),
@@ -119,28 +130,72 @@ class SedekahDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Placeholder Image Sedekah
+            // --- PERBAIKAN: LOGIKA FOTO DARI URL ADMIN ---
             Container(
-              height: 250, width: double.infinity, color: const Color(0xFFFFF3E0),
-              child: const Icon(Icons.volunteer_activism, size: 80, color: Color(0xFFE65100)),
+              height: 250,
+              width: double.infinity,
+              child: dataSedekah['imageUrl'] != null && dataSedekah['imageUrl'] != ''
+                  ? Image.network(
+                      dataSedekah['imageUrl'],
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(child: CircularProgressIndicator(color: Colors.orange.shade200));
+                      },
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                      ),
+                    )
+                  : Container(
+                      color: const Color(0xFFFFF3E0),
+                      child: const Icon(Icons.volunteer_activism, size: 80, color: Color(0xFFE65100)),
+                    ),
             ),
+            
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dataSedekah['judul'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text('Informasi Program', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                  Text(
+                    dataSedekah['judul'] ?? '', 
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)
                   ),
-                  const SizedBox(height: 12),
-                  Text(dataSedekah['deskripsi'] ?? '', style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)),
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3E0),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('Informasi Program', style: TextStyle(color: Color(0xFFE65100), fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "Sedekah",
+                        style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                      )
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 10),
+                  
+                  const Text(
+                    "Deskripsi Lengkap:",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 10),
+                  
+                  Text(
+                    dataSedekah['deskripsi'] ?? 'Deskripsi tidak tersedia.', 
+                    style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -160,6 +215,7 @@ class SedekahDetailScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4CAF50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
             ),
             onPressed: () => _showPaymentForm(context),
             child: const Text('LANJUTKAN SEDEKAH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),

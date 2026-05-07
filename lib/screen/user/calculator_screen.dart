@@ -44,11 +44,23 @@ class ZakatMenuScreen extends StatelessWidget {
                 color: Colors.white,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
-                  leading: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.clean_hands_rounded, color: Color(0xFF2E7D32)),
-                  ),
+                  // Ganti leading di dalam ListTile:
+leading: ClipRRect(
+  borderRadius: BorderRadius.circular(8),
+  child: data['imageUrl'] != null && data['imageUrl'] != ''
+      ? Image.network(
+          data['imageUrl'],
+          width: 50, height: 50, fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width: 50, height: 50, color: Colors.green[50],
+            child: const Icon(Icons.image_not_supported, color: Colors.green),
+          ),
+        )
+      : Container(
+          width: 50, height: 50, color: Colors.green[50],
+          child: const Icon(Icons.clean_hands_rounded, color: Colors.green),
+        ),
+),
                   title: Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text('Tipe: ${data['tipeZakat']?.toUpperCase() ?? "Umum"}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14),
@@ -78,36 +90,111 @@ class ZakatDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('Detail Program'), backgroundColor: Colors.white, elevation: 0, iconTheme: const IconThemeData(color: Colors.black)),
+      appBar: AppBar(
+        title: const Text('Detail Program'), 
+        backgroundColor: Colors.white, 
+        elevation: 0, 
+        iconTheme: const IconThemeData(color: Colors.black)
+      ),
+      
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(height: 200, width: double.infinity, color: Colors.green.shade50, child: const Icon(Icons.clean_hands_rounded, size: 80, color: Colors.green)),
+            // --- PERBAIKAN: LOGIKA FOTO DI DETAIL ---
+            Container(
+              height: 250, // Kita buat sedikit lebih tinggi agar foto terlihat jelas
+              width: double.infinity,
+              child: dataZakat['imageUrl'] != null && dataZakat['imageUrl'] != ''
+                  ? Image.network(
+                      dataZakat['imageUrl'],
+                      fit: BoxFit.cover,
+                      // Loading jika koneksi lambat
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(child: CircularProgressIndicator(color: Colors.green.shade200));
+                      },
+                      // Error jika link foto mati/salah
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                      ),
+                    )
+                  : Container(
+                      color: Colors.green.shade50,
+                      child: const Icon(Icons.clean_hands_rounded, size: 80, color: Colors.green),
+                    ),
+            ),
+            
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dataZakat['judul'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Text(dataZakat['deskripsi'] ?? '', style: const TextStyle(fontSize: 15, height: 1.6)),
+                  // Judul Program
+                  Text(
+                    dataZakat['judul'] ?? '', 
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Label Kategori/Tipe
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6)
+                    ),
+                    child: Text(
+                      "Kategori: ${dataZakat['tipeZakat']?.toUpperCase() ?? 'ZAKAT'}",
+                      style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 10),
+                  
+                  const Text(
+                    "Informasi Lengkap:",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  
+                  // Deskripsi Program
+                  Text(
+                    dataZakat['deskripsi'] ?? 'Tidak ada deskripsi tersedia.', 
+                    style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)
+                  ),
+                  
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
           ],
         ),
       ),
+      
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]
+        ),
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4CAF50), minimumSize: const Size(double.infinity, 55), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4CAF50), 
+            minimumSize: const Size(double.infinity, 55), 
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+          ),
           onPressed: () {
             showModalBottomSheet(
-              context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+              context: context, 
+              isScrollControlled: true, 
+              backgroundColor: Colors.transparent,
               builder: (context) => ZakatCalculatorForm(dataZakat: dataZakat),
             );
           },
-          child: const Text('HITUNG & BAYAR ZAKAT', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          child: const Text('HITUNG & BAYAR ZAKAT', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
         ),
       ),
     );

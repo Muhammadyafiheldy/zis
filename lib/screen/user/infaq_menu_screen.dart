@@ -53,11 +53,23 @@ class InfaqMenuScreen extends StatelessWidget {
                 color: Colors.white,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
-                  leading: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: const Color(0xFFE3F2FD), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.mosque_rounded, color: Color(0xFF1565C0)),
-                  ),
+                  // Ganti leading di dalam ListTile:
+leading: ClipRRect(
+  borderRadius: BorderRadius.circular(8),
+  child: data['imageUrl'] != null && data['imageUrl'] != ''
+      ? Image.network(
+          data['imageUrl'],
+          width: 50, height: 50, fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width: 50, height: 50, color: Colors.green[50],
+            child: const Icon(Icons.image_not_supported, color: Colors.green),
+          ),
+        )
+      : Container(
+          width: 50, height: 50, color: Colors.green[50],
+          child: const Icon(Icons.clean_hands_rounded, color: Colors.green),
+        ),
+),
                   title: Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 8.0),
@@ -103,31 +115,83 @@ class InfaqDetailScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Detail Infaq', style: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white, elevation: 0, iconTheme: const IconThemeData(color: Colors.black87),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Placeholder Image (Bisa diganti jika admin sudah bisa upload image)
+            // --- PERBAIKAN: LOGIKA FOTO DARI URL ADMIN ---
             Container(
-              height: 250, width: double.infinity, color: const Color(0xFFE3F2FD),
-              child: const Icon(Icons.mosque, size: 80, color: Color(0xFF1565C0)),
+              height: 250,
+              width: double.infinity,
+              child: dataInfaq['imageUrl'] != null && dataInfaq['imageUrl'] != ''
+                  ? Image.network(
+                      dataInfaq['imageUrl'],
+                      fit: BoxFit.cover,
+                      // Loading indicator saat gambar dimuat
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(child: CircularProgressIndicator(color: Colors.blue.shade200));
+                      },
+                      // Tampilan jika link gambar error atau mati
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                      ),
+                    )
+                  : Container(
+                      color: const Color(0xFFE3F2FD),
+                      child: const Icon(Icons.mosque, size: 80, color: Color(0xFF1565C0)),
+                    ),
             ),
+            
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dataInfaq['judul'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('Tujuan Infaq', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                  Text(
+                    dataInfaq['judul'] ?? '', 
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)
                   ),
-                  const SizedBox(height: 12),
-                  Text(dataInfaq['deskripsi'] ?? '', style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)),
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('Tujuan Infaq', style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 10),
+                      // Tambahan badge kategori
+                      Text(
+                        "Infaq",
+                        style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                      )
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 10),
+                  
+                  const Text(
+                    "Deskripsi Program:",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 10),
+                  
+                  Text(
+                    dataInfaq['deskripsi'] ?? 'Tidak ada deskripsi untuk program ini.', 
+                    style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87)
+                  ),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -147,6 +211,7 @@ class InfaqDetailScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4CAF50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
             ),
             onPressed: () => _showPaymentForm(context),
             child: const Text('LANJUTKAN PEMBAYARAN', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
