@@ -260,107 +260,100 @@ class _AdminCampaignScreenState extends State<AdminCampaignScreen> {
   final FirestoreService _firestoreService = FirestoreService();
 
   void _showAddEditForm({ProgramZis? program}) {
-    final judulController = TextEditingController(text: program?.judul ?? '');
-    final deskripsiController = TextEditingController(text: program?.deskripsi ?? '');
-    
-    // VARIABEL STATE UNTUK MODAL
-    bool localIsUrgent = program?.isUrgent ?? false;
-    String? localTipeZakat = program?.tipeZakat; 
+  final judulController = TextEditingController(text: program?.judul ?? '');
+  final deskripsiController = TextEditingController(text: program?.deskripsi ?? '');
+  final imageController = TextEditingController(text: program?.imageUrl ?? ''); // Tambahkan ini
 
-    showModalBottomSheet(
-      context: context, 
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) {
-        return StatefulBuilder( // Agar UI Modal Update saat Dropdown/Switch diklik
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, top: 24, left: 24, right: 24),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(program == null ? 'Tambah Program ${widget.kategori.toUpperCase()}' : 'Edit Program', 
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 20),
-                    
-                    TextField(
-                      controller: judulController,
-                      decoration: const InputDecoration(labelText: 'Judul Program', border: OutlineInputBorder()),
+  bool localIsUrgent = program?.isUrgent ?? false;
+  String? localTipeZakat = program?.tipeZakat;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, top: 24, left: 24, right: 24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(program == null ? 'Tambah Program' : 'Edit Program', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  
+                  TextField(controller: judulController, decoration: const InputDecoration(labelText: 'Judul Program', border: OutlineInputBorder())),
+                  const SizedBox(height: 16),
+                  
+                  // INPUT LINK FOTO
+                  TextField(
+                    controller: imageController, 
+                    decoration: const InputDecoration(
+                      labelText: 'Link URL Foto (Opsional)', 
+                      hintText: 'https://link-gambar.com/foto.jpg',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.link)
+                    )
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (widget.kategori.toLowerCase() == 'zakat') ...[
+                    DropdownButtonFormField<String>(
+                      value: localTipeZakat,
+                      decoration: const InputDecoration(labelText: 'Tipe Rumus Zakat', border: OutlineInputBorder()),
+                      items: const [
+                        DropdownMenuItem(value: 'fitrah', child: Text('Zakat Fitrah')),
+                        DropdownMenuItem(value: 'penghasilan', child: Text('Zakat Penghasilan')),
+                        DropdownMenuItem(value: 'maal', child: Text('Zakat Maal')),
+                      ],
+                      onChanged: (val) => setModalState(() => localTipeZakat = val),
                     ),
                     const SizedBox(height: 16),
-
-                    // --- DROPDOWN TIPE ZAKAT (HANYA MUNCUL JIKA KATEGORI ZAKAT) ---
-                    if (widget.kategori.toLowerCase() == 'zakat') ...[
-                      DropdownButtonFormField<String>(
-                        value: localTipeZakat,
-                        decoration: const InputDecoration(labelText: 'Tipe Rumus Zakat', border: OutlineInputBorder()),
-                        items: const [
-                          DropdownMenuItem(value: 'fitrah', child: Text('Zakat Fitrah (Jiwa)')),
-                          DropdownMenuItem(value: 'penghasilan', child: Text('Zakat Penghasilan (Gaji)')),
-                          DropdownMenuItem(value: 'maal', child: Text('Zakat Maal (Harta)')),
-                          DropdownMenuItem(value: 'perdagangan', child: Text('Zakat Perdagangan')),
-                          DropdownMenuItem(value: 'pertanian', child: Text('Zakat Pertanian')),
-                        ],
-                        onChanged: (val) {
-                          setModalState(() => localTipeZakat = val);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    TextField(
-                      controller: deskripsiController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(labelText: 'Deskripsi Lengkap', border: OutlineInputBorder()),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    SwitchListTile(
-                      title: const Text("Status Darurat (Urgent)"),
-                      subtitle: const Text("Tampilkan di 'Perlu Segera Dibantu'"),
-                      value: localIsUrgent,
-                      activeColor: Colors.red,
-                      onChanged: (val) => setModalState(() => localIsUrgent = val),
-                    ),
-                    
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity, height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4CAF50)),
-                        onPressed: () {
-                          if (judulController.text.isEmpty) return;
-
-                          final pBaru = ProgramZis(
-                            judul: judulController.text.trim(),
-                            deskripsi: deskripsiController.text.trim(),
-                            kategori: widget.kategori.toLowerCase(),
-                            isUrgent: localIsUrgent,
-                            tipeZakat: localTipeZakat, // SIMPAN TIPE RUMUS
-                          );
-
-                          if (program == null) {
-                            _firestoreService.addProgram(pBaru); 
-                          } else {
-                            _firestoreService.updateProgram(program.id!, pBaru); 
-                          }
-                          Navigator.pop(context);
-                        },
-                        child: const Text('SIMPAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
                   ],
-                ),
+
+                  TextField(controller: deskripsiController, maxLines: 3, decoration: const InputDecoration(labelText: 'Deskripsi', border: OutlineInputBorder())),
+                  
+                  SwitchListTile(
+                    title: const Text("Status Darurat"),
+                    value: localIsUrgent,
+                    onChanged: (val) => setModalState(() => localIsUrgent = val),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4CAF50)),
+                      onPressed: () {
+                        final pBaru = ProgramZis(
+                          judul: judulController.text.trim(),
+                          deskripsi: deskripsiController.text.trim(),
+                          kategori: widget.kategori.toLowerCase(),
+                          isUrgent: localIsUrgent,
+                          tipeZakat: localTipeZakat,
+                          imageUrl: imageController.text.trim(), // SIMPAN LINKNYA
+                        );
+
+                        if (program == null) _firestoreService.addProgram(pBaru);
+                        else _firestoreService.updateProgram(program.id!, pBaru);
+                        
+                        Navigator.pop(context);
+                      },
+                      child: const Text('SIMPAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                ],
               ),
-            );
-          }
-        );
-      }
-    );
-  }
+            ),
+          );
+        }
+      );
+    },
+  );
+}
 
   void _deleteProgram(String id) {
     _firestoreService.deleteProgram(id);

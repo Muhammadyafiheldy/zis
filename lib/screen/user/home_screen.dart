@@ -62,7 +62,7 @@ class HomeScreen extends StatelessWidget {
                     Container(
                       height: 250, width: double.infinity,
                       decoration: const BoxDecoration(
-                        image: DecorationImage(image: AssetImage('assets/images/masjid.jpg'), fit: BoxFit.cover),
+                        image: DecorationImage(image: AssetImage('assets/images/masjidd.jpeg'), fit: BoxFit.cover),
                       ),
                     ),
                     Container(
@@ -193,74 +193,83 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildUrgentCard(BuildContext context, Map<String, dynamic> data) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => CampaignDetailScreen(campaign: data))),
-      child: Container(
-        width: 220, margin: const EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)]),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Container(
-                height: 130, width: double.infinity, color: Colors.red.shade50,
-                child: const Icon(Icons.warning_amber_rounded, size: 50, color: Colors.red), 
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(6)),
-                    child: const Text('DARURAT', style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            )
-          ],
-        ),
+ Widget _buildUrgentCard(BuildContext context, Map<String, dynamic> data) {
+  return GestureDetector(
+    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => CampaignDetailScreen(campaign: data))),
+    child: Container(
+      width: 220, margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: data['imageUrl'] != null && data['imageUrl'] != ''
+              ? Image.network(
+                  data['imageUrl'], 
+                  height: 130, width: double.infinity, fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(height: 130, color: Colors.grey[200], child: const Icon(Icons.broken_image)),
+                )
+              : Container(height: 130, width: double.infinity, color: Colors.red[50], child: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 2),
+          )
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildRegularCard(BuildContext context, Map<String, dynamic> data) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => CampaignDetailScreen(campaign: data))),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
-        child: Row(
-          children: [
-            Container(
-              height: 70, width: 70, 
-              decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.favorite, color: Colors.green),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
+  return GestureDetector(
+    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => CampaignDetailScreen(campaign: data))),
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+      ),
+      child: Row(
+        children: [
+          // --- BAGIAN FOTO ---
+          ClipRRect(
+            borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+            child: data['imageUrl'] != null && data['imageUrl'] != ''
+                ? Image.network(
+                    data['imageUrl'],
+                    width: 100, height: 100, fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 100, height: 100, color: Colors.grey[200],
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  )
+                : Container(
+                    width: 100, height: 100, color: Colors.green[50],
+                    child: const Icon(Icons.volunteer_activism, color: Colors.green),
+                  ),
+          ),
+          // --- KONTEN TEKS ---
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(data['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2),
                   const SizedBox(height: 4),
-                  Text('Kategori: ${data['kategori']?.toUpperCase() ?? '-'}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(data['deskripsi'] ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSearchBar() {
     return Container(
